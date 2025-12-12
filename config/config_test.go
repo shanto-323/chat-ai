@@ -1,16 +1,18 @@
 package config
 
-import "testing"
+import (
+	"testing"
 
-type ConfigTestStruct struct {
-	name     string
-	testFunc func(t *testing.T)
-}
-
-var ConfigTests = []ConfigTestStruct{}
+	"github.com/joho/godotenv"
+	"github.com/stretchr/testify/assert"
+)
 
 func TestConfig(t *testing.T) {
-	for _, tc := range ConfigTests {
-		t.Run(tc.name, tc.testFunc)
-	}
+	err := godotenv.Load("../.env")
+	assert.Nil(t, err)
+
+	cfg, err := LoadConfig()
+	assert.Nil(t, err)
+
+	t.Log(cfg)
 }

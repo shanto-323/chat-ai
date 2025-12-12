@@ -9,27 +9,34 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/shanto-323/chat-ai/config"
 	"github.com/shanto-323/chat-ai/internal/database"
+	"github.com/shanto-323/chat-ai/internal/server/manager"
 )
 
 type Server struct {
-	Config *config.Config
-	Logger *zerolog.Logger
-	DB     database.Database
+	Config  *config.Config
+	Logger  *zerolog.Logger
+	DB      database.Database
+	Manager *manager.AIManager
 
 	httpServer *http.Server
 }
 
 func New(cfg *config.Config, logger *zerolog.Logger) (*Server, error) {
 	db, err := database.New(cfg, logger)
+	if err != nil {
+		return nil, err
+	}
 
+	m, err := manager.New(cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Server{
-		Config: cfg,
-		Logger: logger,
-		DB:     db,
+		Config:  cfg,
+		Logger:  logger,
+		DB:      db,
+		Manager: m,
 	}, nil
 }
 
@@ -51,6 +58,7 @@ func (s *Server) Run() error {
 	s.Logger.Info().
 		Str("port", s.Config.Server.Port).
 		Str("env", s.Config.Primary.Env).
+		Str("db_type", s.Config.Primary.DatabaseType).
 		Msg("starting server")
 
 	return s.httpServer.ListenAndServe()

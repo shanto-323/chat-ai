@@ -5,15 +5,20 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/shanto-323/chat-ai/config"
-	"github.com/shanto-323/chat-ai/internal/database"
 )
 
+type MockDb map[string]any
+
 type DB struct {
+	pool MockDb
 	logger *zerolog.Logger
 }
 
-func New(config *config.Config, logger *zerolog.Logger) (database.Database, error) {
+func New(config *config.Config, logger *zerolog.Logger) (*DB, error) {
+	logger.Debug().Msg("mock database started")
+
 	return &DB{
+		pool: make(MockDb),
 		logger: logger,
 	}, nil
 }

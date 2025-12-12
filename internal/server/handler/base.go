@@ -6,20 +6,16 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/shanto-323/chat-ai/internal/server/middleware"
 	"github.com/shanto-323/chat-ai/internal/server/validation"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 )
 
 type HandlerFunc[Req validation.Validatable, Res any] func(c echo.Context, req Req) (Res, error)
 
-type HandlerFuncNoContent[Req validation.Validatable] func(c echo.Context, req Req) error
+type HandleNoResponseFunc[Req validation.Validatable] func(c echo.Context, req Req) error
 
 type ResponseHandler interface {
 	Handle(c echo.Context, result any) error
 	GetOperation() string
 }
-
-// -------------------------- //
 
 type JSONResponseHandler struct {
 	status int
@@ -33,39 +29,17 @@ func (h JSONResponseHandler) GetOperation() string {
 	return "handler"
 }
 
-// -------------------------- //
-
-type NoContentResponseHandler struct {
+type NoResponseHandler struct {
 	status int
 }
 
-func (h NoContentResponseHandler) Handle(c echo.Context, result any) error {
+func (h NoResponseHandler) Handle(c echo.Context, result any) error {
 	return c.NoContent(h.status)
 }
 
-func (h NoContentResponseHandler) GetOperation() string {
-	return "handler_no_content"
+func (h NoResponseHandler) GetOperation() string {
+	return "handler_no_response"
 }
-
-// -------------------------- //
-
-type FileResponseHandler struct {
-	status      int
-	filename    string
-	contentType string
-}
-
-func (h FileResponseHandler) Handle(c echo.Context, result any) error {
-	data := result.([]byte)
-	c.Response().Header().Set("Content-Disposition", "attachment; filename="+h.filename)
-	return c.Blob(h.status, h.contentType, data)
-}
-
-func (h FileResponseHandler) GetOperation() string {
-	return "handler_file"
-}
-
-// -------------------------- //
 
 func handleRequest[Req validation.Validatable](
 	c echo.Context,
@@ -76,29 +50,15 @@ func handleRequest[Req validation.Validatable](
 	start := time.Now()
 	method := c.Request().Method
 	path := c.Path()
-	route := path
-
-	span := trace.SpanFromContext(c.Request().Context())
 
 	// Get context-enhanced logger
 	loggerBuilder := middleware.GetLogger(c).With().
 		Str("operation", responseHandler.GetOperation()).
 		Str("method", method).
-		Str("path", path).
-		Str("route", route)
-
-
-
-	// Add file-specific fields to logger if it's a file handler
-	if fileHandler, ok := responseHandler.(FileResponseHandler); ok {
-		loggerBuilder = loggerBuilder.
-			Str("filename", fileHandler.filename).
-			Str("content_type", fileHandler.contentType)
-	}
+		Str("path", path)
 
 	logger := loggerBuilder.Logger()
 
-	// Validation with observability
 	validationStart := time.Now()
 	if err := validation.BindAndValidate(c, req); err != nil {
 		validationDuration := time.Since(validationStart)
@@ -107,19 +67,11 @@ func handleRequest[Req validation.Validatable](
 			Err(err).
 			Dur("validation_duration", validationDuration).
 			Msg("request validation failed")
-		span.RecordError(err)
-		span.SetAttributes(
-			attribute.String("validation.status", "failed"),
-			attribute.Int64("validation.duration_ms", validationDuration.Milliseconds()),
-		)
+
 		return err
 	}
 
 	validationDuration := time.Since(validationStart)
-	span.SetAttributes(
-		attribute.String("validation.status", "success"),
-		attribute.Int64("validation.duration_ms", validationDuration.Milliseconds()),
-	)
 
 	logger.Debug().
 		Dur("validation_duration", validationDuration).
@@ -137,22 +89,11 @@ func handleRequest[Req validation.Validatable](
 			Dur("handler_duration", handlerDuration).
 			Dur("total_duration", totalDuration).
 			Msg("handler execution failed")
-		span.RecordError(err)
-		span.SetAttributes(
-			attribute.String("handler.status", "failed"),
-			attribute.Int64("handler.duration_ms", handlerDuration.Milliseconds()),
-			attribute.Int64("total.duration_ms", validationDuration.Milliseconds()),
-		)
 
 		return err
 	}
 
 	totalDuration := time.Since(start)
-	span.SetAttributes(
-		attribute.String("handler.status", "success"),
-		attribute.Int64("handler.duration_ms", handlerDuration.Milliseconds()),
-		attribute.Int64("total.duration_ms", totalDuration.Milliseconds()),
-	)
 
 	logger.Info().
 		Dur("handler_duration", handlerDuration).
@@ -162,8 +103,6 @@ func handleRequest[Req validation.Validatable](
 
 	return responseHandler.Handle(c, result)
 }
-
-// -------------------------- //
 
 func Handle[Req validation.Validatable, Res any](
 	handler HandlerFunc[Req, Res],
@@ -177,37 +116,14 @@ func Handle[Req validation.Validatable, Res any](
 	}
 }
 
-// -------------------------- //
-
-func HandleFile[Req validation.Validatable](
-	handler HandlerFunc[Req, []byte],
-	status int,
-	req Req,
-	filename string,
-	contentType string,
-) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		return handleRequest(c, req, func(c echo.Context, req Req) (any, error) {
-			return handler(c, req)
-		}, FileResponseHandler{
-			status:      status,
-			filename:    filename,
-			contentType: contentType,
-		})
-	}
-}
-
-// -------------------------- //
-
-func HandleNoContent[Req validation.Validatable](
-	handler HandlerFuncNoContent[Req],
+func HandleNoResponse[Req validation.Validatable](
+	handler HandleNoResponseFunc[Req],
 	status int,
 	req Req,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		return handleRequest(c, req, func(c echo.Context, req Req) (any, error) {
-			err := handler(c, req)
-			return nil, err
-		}, NoContentResponseHandler{status: status})
+			return nil, handler(c, req)
+		}, NoResponseHandler{status: status})
 	}
 }

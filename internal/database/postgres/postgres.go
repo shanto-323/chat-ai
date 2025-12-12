@@ -9,7 +9,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog"
 	"github.com/shanto-323/chat-ai/config"
-	"github.com/shanto-323/chat-ai/internal/database"
 )
 
 type DB struct {
@@ -17,21 +16,21 @@ type DB struct {
 	logger *zerolog.Logger
 }
 
-func New(config *config.Config, logger *zerolog.Logger) (database.Database, error) {
-	hostPort := net.JoinHostPort(config.Database.Host, strconv.Itoa(config.Database.Port))
+func New(cfg *config.Config, logger *zerolog.Logger) (*DB, error) {
+	hostPort := net.JoinHostPort(cfg.Database.Host, strconv.Itoa(cfg.Database.Port))
 
 	dsn := fmt.Sprintf(
 		"postgres://%s:%s@%s/%s?sslmode=%s",
-		config.Database.User,
-		config.Database.Password,
+		cfg.Database.User,
+		cfg.Database.Password,
 		hostPort,
-		config.Database.Name,
-		config.Database.SSLMode,
+		cfg.Database.Name,
+		cfg.Database.SSLMode,
 	)
 
 	pgxPoolConfig, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse pgx pool config: %w", err)
+		return nil, fmt.Errorf("failed to parse pgx pool cfg: %w", err)
 	}
 
 	pool, err := pgxpool.NewWithConfig(context.Background(), pgxPoolConfig)

@@ -15,9 +15,16 @@ func NewRouter(s *server.Server, h *handler.Handlers) *echo.Echo {
 
 	router := echo.New()
 
+	router.HTTPErrorHandler = middlewares.GlobalErrorHandler
+
 	router.Use(
+		middlewares.RateLimitHit(),
+		middlewares.CROS(),
+		middlewares.Secure(),
 		middleware.RequestID(),
 		middlewares.EnhanceContext(),
+		middlewares.Global.RequestLogger(),
+		middlewares.Global.Recover(),
 	)
 
 	r := router.Group(ApiVersion)

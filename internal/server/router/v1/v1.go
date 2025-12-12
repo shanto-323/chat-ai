@@ -7,5 +7,7 @@ import (
 )
 
 func RegisterV1Routes(r *echo.Group, h *handler.Handlers, m *middleware.Middlewares) {
+	registerAuthRoutes(r, h)
 
+	registerChatRoute(r, h, m)
 }

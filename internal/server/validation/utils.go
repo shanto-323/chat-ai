@@ -81,12 +81,8 @@ func extrectValidationErrors(err error) (string, []errs.FieldError) {
 			msg = fmt.Sprintf("must be one of: %s", err.Param())
 		case "email":
 			msg = "must be a valid email address"
-		case "e164":
-			msg = "must be a valid phone number with country code"
 		case "uuid":
 			msg = "must be a valid UUID"
-		case "uuidList":
-			msg = "must be a comma-separated list of valid UUIDs"
 		case "dive":
 			msg = "some items are invalid"
 		default:

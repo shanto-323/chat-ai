@@ -9,5 +9,4 @@ type VLMManager interface {
 	AnalyzeImage(imageURL string) (*model.VLMResult, error)
 }
 
-func NewVLMManager(config *config.Config)
-
+func New(config *config.Config) (VLMManager, error) { return nil, nil }

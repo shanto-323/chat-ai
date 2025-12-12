@@ -6,6 +6,7 @@ type Middlewares struct {
 	*Global
 	*RateLimit
 	*ContextEnhancer
+	*AuthMiddleware
 }
 
 func New(s *server.Server) *Middlewares {
@@ -13,5 +14,6 @@ func New(s *server.Server) *Middlewares {
 		Global:          NewGlobal(s),
 		RateLimit:       NewRateLimit(s),
 		ContextEnhancer: NewContextEnhancer(s),
+		AuthMiddleware:  NewAuthMiddleware(s),
 	}
 }
