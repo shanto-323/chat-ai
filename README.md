@@ -173,21 +173,103 @@ Common Status Codes:
 ## Project Structure
 
 ```
-raco-ai/
-├── cmd/main/main.go
-├── internal/
-│   ├── auth/
-│   ├── chat/
-│   ├── server/
-│   │   ├── handler/
-│   │   └── routes.go
-│   └── database/
-├── static/
-│   ├── openapi.html
-│   └── openapi.json
-├── .env.example
-├── Dockerfile
-└── README.md
+├── Makefile
+├── README.md
+├── cmd
+│   └── main.go
+├── config
+│   ├── config.go
+│   └── config_test.go
+├── docker-compose.yaml
+├── go.mod
+├── go.sum
+├── internal
+│   ├── database
+│   │   ├── database.go
+│   │   ├── migrations
+│   │   │   └── 001_user.sql
+│   │   ├── migrator.go
+│   │   ├── mock
+│   │   │   ├── conversation_log.go
+│   │   │   ├── mock.go
+│   │   │   └── user.go
+│   │   └── postgres
+│   │       ├── conversation_log.go
+│   │       ├── postgres.go
+│   │       └── user.go
+│   ├── server
+│   │   ├── errs
+│   │   │   ├── http.go
+│   │   │   └── types.go
+│   │   ├── handler
+│   │   │   ├── auth.go
+│   │   │   ├── auth_test.go
+│   │   │   ├── base.go
+│   │   │   ├── chat.go
+│   │   │   ├── chat_test.go
+│   │   │   ├── hendlers.go
+│   │   │   └── openapi.go
+│   │   ├── manager
+│   │   │   ├── llm
+│   │   │   │   ├── llm_manager.go
+│   │   │   │   └── openrouter
+│   │   │   │       ├── openrouter.go
+│   │   │   │       └── openrouter_test.go
+│   │   │   ├── manager.go
+│   │   │   └── vlm
+│   │   │       ├── mock
+│   │   │       │   └── mock.go
+│   │   │       └── vlm_manager.go
+│   │   ├── middleware
+│   │   │   ├── auth.go
+│   │   │   ├── context.go
+│   │   │   ├── global.go
+│   │   │   ├── middlewares.go
+│   │   │   ├── rate_limit.go
+│   │   │   └── request_id.go
+│   │   ├── router
+│   │   │   ├── router.go
+│   │   │   ├── system.go
+│   │   │   └── v1
+│   │   │       ├── auth.go
+│   │   │       ├── chat.go
+│   │   │       └── v1.go
+│   │   ├── server.go
+│   │   └── validation
+│   │       └── utils.go
+│   └── service
+│       ├── auth.go
+│       ├── chat.go
+│       ├── image
+│       │   └── image.go
+│       └── services.go
+├── model
+│   ├── base.go
+│   ├── base_lv.go
+│   ├── dto
+│   │   ├── chat.go
+│   │   ├── conversation_log.go
+│   │   ├── llm.go
+│   │   ├── user.go
+│   │   └── vlm.go
+│   ├── entity
+│   │   ├── conversation_log.go
+│   │   └── user.go
+│   ├── paginate.go
+│   └── vlm_result.go
+├── pkg
+│   ├── hash.go
+│   ├── jwt.go
+│   └── logger
+│       └── logger.go
+├── scripts
+│   └── Dockerfile
+├── sqlerr
+│   ├── error.go
+│   └── handler.go
+└── static
+    ├── openapi.html
+    └── openapi.json
 ```
 
 ## Notes
