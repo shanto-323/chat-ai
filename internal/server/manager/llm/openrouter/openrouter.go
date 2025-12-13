@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/shanto-323/chat-ai/config"
 	"github.com/shanto-323/chat-ai/model/dto"
 )
@@ -18,11 +20,13 @@ const (
 )
 
 type Openrouter struct {
+	logger *zerolog.Logger
 	Config *config.Config
 }
 
-func NewOpenrouter(cfg *config.Config) *Openrouter {
+func NewOpenrouter(cfg *config.Config, l *zerolog.Logger) *Openrouter {
 	return &Openrouter{
+		logger: l,
 		Config: cfg,
 	}
 }
@@ -52,12 +56,13 @@ func (o *Openrouter) response(query string, model string) (string, error) {
 		return "", err
 	}
 
+	start := time.Now()
+
 	req, err := http.NewRequest("POST", OPENROUTER_URL, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return "", err
 	}
 
-	// will add a complition timer
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+o.Config.Ai.LLMInterfaceApiKey)
 
@@ -67,14 +72,22 @@ func (o *Openrouter) response(query string, model string) (string, error) {
 		return "", err
 	}
 
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
 	defer func() {
+		if err != nil {
+			o.logger.Err(err).Msg(err.Error())
+		}
 		_ = resp.Body.Close()
 	}()
 
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		panic(err)
-	}
+	o.logger.Info().
+		Str("event", "llm-response").
+		Str("time", time.Since(start).String()).
+		Msg("successful")
 
 	return o.extractResponse(respBody)
 }

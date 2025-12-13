@@ -3,11 +3,11 @@ package model
 import "time"
 
 type BaseLLMModel struct {
-	LLMModelName string `json:"llmModelName" db:"llm_model_name"`
+	LLMModelName string `json:"llm_model_name" db:"llm_model_name"`
 }
 
 type BaseVLMModel struct {
-	VLMModelName string `json:"vlmModelName" db:"vlm_model_name"`
+	VLMModelName string `json:"vlm_model_name" db:"vlm_model_name"`
 }
 
 type BaseTimestamp struct {

@@ -13,12 +13,13 @@ import (
 )
 
 type Config struct {
-	Primary  Primary        `koanf:"primary" validate:"required"`
-	Server   ServerConfig   `koanf:"server" validate:"required"`
-	Database DatabaseConfig `koanf:"database" validate:"required"`
-	Ai       AI             `koanf:"ai" validate:"required"`
-	Key      Key            `koanf:"key" validate:"required"`
-	Logging  LoggingConfig  `koanf:"logging" validate:"required"`
+	Primary          Primary        `koanf:"primary" validate:"required"`
+	Server           ServerConfig   `koanf:"server" validate:"required"`
+	Database         DatabaseConfig `koanf:"database" validate:"required"`
+	Ai               AI             `koanf:"ai" validate:"required"`
+	Key              Key            `koanf:"key" validate:"required"`
+	Logging          LoggingConfig  `koanf:"logging" validate:"required"`
+	UploadsDirectory string         `koanf:"directory" validate:"required"`
 }
 
 type Primary struct {
@@ -51,6 +52,8 @@ type DatabaseConfig struct {
 type AI struct {
 	LLMInterfaceProvider string `koanf:"llm_provider" validate:"required"`
 	LLMInterfaceApiKey   string `koanf:"llm_api_key" validate:"required"`
+	VLMInterfaceProvider string `koanf:"vlm_provider" validate:"required"`
+	VLMInterfaceApiKey   string `koanf:"vlm_api_key" validate:"required"`
 }
 
 type Key struct {
@@ -87,8 +90,5 @@ func LoadConfig() (*Config, error) {
 }
 
 func (cfg *Config) IsProd() bool {
-	if cfg.Primary.Env == "prod" {
-		return true
-	}
-	return false
+	return cfg.Primary.Env == "prod"
 }

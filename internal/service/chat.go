@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -14,24 +15,43 @@ import (
 	"github.com/shanto-323/chat-ai/model/entity"
 )
 
-type ChatService struct {
+type ChatService interface {
+	MultimodalChat(c echo.Context, payload *dto.ChatRequest) (*entity.ConversationLog, error)
+	MultimodalChatHistory(c echo.Context, payload *dto.ConversationHistoryQuery) (*model.PaginatedResponse[entity.ConversationLog], error)
+}
+
+type chatService struct {
 	is *image.ImageService
 
 	manager *manager.AIManager
 	db      database.Database
 }
 
-func NewChatService(manager *manager.AIManager, db database.Database, is *image.ImageService) *ChatService {
-	return &ChatService{
+func NewChatService(manager *manager.AIManager, db database.Database, is *image.ImageService) ChatService {
+	return &chatService{
 		manager: manager,
 		db:      db,
 		is:      is,
 	}
 }
 
-func (s *ChatService) MultimodalChat(c echo.Context, payload *dto.ChatRequest) (*entity.ConversationLog, error) {
-	///-> vlm returns an array of text ...
-	response, err := s.manager.LLMManager.GenerateResponse(context.Background(), &dto.LLMRequest{Messages: payload.UserMessage, Model: payload.ModelConfig})
+func (s *chatService) MultimodalChat(c echo.Context, payload *dto.ChatRequest) (*entity.ConversationLog, error) {
+	images, err := s.is.ProcessImage(payload.Images)
+	if err != nil {
+		return nil, err
+	}
+
+	// With a real vlm service we can get structerd info about images.
+	// For now this provide nothing as but can be implemented.
+	_, err = s.manager.VLMManager.AnalyzeImage(images)
+
+	// Lets imagine we got our info and we insered that in processedText.
+	processedText := payload.UserMessage
+
+	ctx, cancel := context.WithTimeout(c.Request().Context(), 60*time.Second)
+	defer cancel()
+
+	response, err := s.manager.LLMManager.GenerateResponse(ctx, &dto.LLMRequest{Messages: processedText, Model: payload.ModelConfig})
 	if err != nil {
 		return nil, err
 	}
@@ -49,16 +69,19 @@ func (s *ChatService) MultimodalChat(c echo.Context, payload *dto.ChatRequest) (
 	}
 
 	conversationLog.LLMModelName = payload.ModelConfig.LLMModel
-	conversationLog.VLMModelName = "" /// setup vlm model name
+	conversationLog.VLMModelName = payload.ModelConfig.VLMModel
 
-	return s.db.CreateConversationLog(context.Background(), conversationLog)
+	return s.db.CreateConversationLog(ctx, conversationLog)
 }
 
-func (s *ChatService) MultimodalChatHistory(c echo.Context, payload *dto.ConversationHistoryQuery) (*model.PaginatedResponse[entity.ConversationLog], error) {
+func (s *chatService) MultimodalChatHistory(c echo.Context, payload *dto.ConversationHistoryQuery) (*model.PaginatedResponse[entity.ConversationLog], error) {
 	userId, ok := c.Get("id").(uuid.UUID)
 	if !ok {
 		return nil, errs.NewInternalServerError()
 	}
 
-	return s.db.GetConversationLogHistory(context.Background(), userId, payload)
+	ctx, cancel := context.WithTimeout(c.Request().Context(), 10*time.Second)
+	defer cancel()
+
+	return s.db.GetConversationLogHistory(ctx, userId, payload)
 }

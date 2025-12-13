@@ -14,6 +14,7 @@ type ImageData struct {
 
 type ModelConfig struct {
 	LLMModel string `json:"llm_model"`
+	VLMModel string `json:"vlm_model"`
 }
 
 type ChatRequest struct {
@@ -34,6 +35,7 @@ func (r *ChatRequest) Validate() error {
 	if r.ModelConfig == nil {
 		r.ModelConfig = &ModelConfig{
 			LLMModel: "llama_70b",
+			VLMModel: "mock",
 		}
 	}
 

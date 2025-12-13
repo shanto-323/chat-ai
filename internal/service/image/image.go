@@ -17,8 +17,7 @@ type ImageService struct {
 	directory string
 }
 
-func New(l *zerolog.Logger) (*ImageService, error) {
-	dir := "../uploads" // can be more dynamic
+func New(l *zerolog.Logger, dir string) (*ImageService, error) {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil, err
 	}
@@ -31,8 +30,9 @@ func New(l *zerolog.Logger) (*ImageService, error) {
 
 func (s *ImageService) ProcessImage(images []dto.ImageData) ([]string, error) {
 	// can add wg, chan and gr to make fast.
-	processedImage := make([]string, len(images))
-	ifFailedImage := make([]string, len(images))
+	processedImage := make([]string, 0, len(images))
+	ifFailedImage := make([]string, 0, len(images))
+
 	for _, img := range images {
 		if img.URL != "" {
 			processedImage = append(processedImage, img.URL)

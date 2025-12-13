@@ -6,12 +6,12 @@ import (
 )
 
 type Services struct {
-	Auth *AuthService
-	Chat *ChatService
+	Auth AuthService
+	Chat ChatService
 }
 
 func New(s *server.Server) *Services {
-	imageService, err := image.New(s.Logger)
+	imageService, err := image.New(s.Logger,s.Config.UploadsDirectory)
 	if err != nil {
 		s.Logger.Err(err).Msg(err.Error())
 	}

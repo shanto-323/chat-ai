@@ -13,7 +13,7 @@ type AIManager struct {
 }
 
 func New(cfg *config.Config, logger *zerolog.Logger) (*AIManager, error) {
-	llmManager, err := llm.New(cfg)
+	llmManager, err := llm.New(cfg,logger)
 	if err != nil {
 		return nil, err
 	}

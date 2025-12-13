@@ -2,7 +2,6 @@ package dto
 
 import (
 	"github.com/go-playground/validator"
-	"github.com/shanto-323/chat-ai/model"
 )
 
 type ConversationLogRequest struct {
@@ -30,7 +29,7 @@ func (l *ConversationHistoryQuery) Validate() error {
 		l.Page = &defaultPage
 	}
 	if l.Limit == nil {
-		defaultLimit := 20
+		defaultLimit := 10
 		l.Limit = &defaultLimit
 	}
 	if l.Order == nil {
@@ -41,9 +40,3 @@ func (l *ConversationHistoryQuery) Validate() error {
 	return nil
 }
 
-type ConversationLogResponse struct {
-	model.BaseLV
-	TextQuery    string   `json:"text_query"`
-	ImageURL     []string `json:"image_url"`
-	ResponseText string   `json:"response_text"`
-}

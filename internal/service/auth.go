@@ -12,19 +12,24 @@ import (
 	"github.com/shanto-323/chat-ai/pkg"
 )
 
-type AuthService struct {
+type AuthService interface {
+	Login(c echo.Context, payload *dto.LoginRequest) (*dto.AuthResponse, error)
+	Register(c echo.Context, payload *dto.RegisterRequest) (*dto.AuthResponse, error)
+}
+
+type authService struct {
 	cfg *config.Config
 	db  database.Database
 }
 
-func NewAuthService(cfg *config.Config, db database.Database) *AuthService {
-	return &AuthService{
+func NewAuthService(cfg *config.Config, db database.Database) AuthService {
+	return &authService{
 		cfg: cfg,
 		db:  db,
 	}
 }
 
-func (a *AuthService) Login(c echo.Context, payload *dto.LoginRequest) (*dto.AuthResponse, error) {
+func (a *authService) Login(c echo.Context, payload *dto.LoginRequest) (*dto.AuthResponse, error) {
 	logger := middleware.GetLogger(c)
 
 	user, err := a.db.GetUserByEmail(context.Background(), payload.Email)
@@ -56,11 +61,11 @@ func (a *AuthService) Login(c echo.Context, payload *dto.LoginRequest) (*dto.Aut
 	}, nil
 }
 
-func (a *AuthService) Register(c echo.Context, payload *dto.RegisterRequest) (*dto.AuthResponse, error) {
+func (a *authService) Register(c echo.Context, payload *dto.RegisterRequest) (*dto.AuthResponse, error) {
 	logger := middleware.GetLogger(c)
 
 	user, err := a.db.GetUserByEmail(context.Background(), payload.Email)
-	if err == nil && user != nil { // this is mock
+	if user != nil {
 		logger.Warn().Msg("register failed, user exists")
 		return nil, err
 	}

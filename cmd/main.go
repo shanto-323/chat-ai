@@ -32,8 +32,8 @@ func main() {
 		logger.Fatal().Err(err).Msg("failed to initialize server")
 	}
 
-	service := service.New(server)
-	handler := handler.New(server, service)
+	services := service.New(server)
+	handler := handler.New(server, services)
 
 	router := router.NewRouter(server, handler)
 	server.SetUpHTTPServer(router)
