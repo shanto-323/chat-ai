@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: postgres_new
+    env_file:
+      - .env.postgres
+    volumes:
+      - data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - net
+
+volumes:
+  logs:
+  data:
+
+networks:
+  net:

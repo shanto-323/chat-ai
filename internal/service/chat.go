@@ -8,6 +8,7 @@ import (
 	"github.com/shanto-323/chat-ai/internal/database"
 	"github.com/shanto-323/chat-ai/internal/server/errs"
 	"github.com/shanto-323/chat-ai/internal/server/manager"
+	"github.com/shanto-323/chat-ai/model"
 	"github.com/shanto-323/chat-ai/model/dto"
 	"github.com/shanto-323/chat-ai/model/entity"
 )
@@ -46,4 +47,13 @@ func (s *ChatService) MultimodalChat(c echo.Context, payload *dto.ChatRequest) (
 	conversationLog.VLMModelName = ""
 
 	return s.db.CreateConversationLog(context.Background(), conversationLog)
+}
+
+func (s *ChatService) MultimodalChatHistory(c echo.Context, payload *dto.ConversationHistoryQuery) (*model.PaginatedResponse[entity.ConversationLog], error){ 
+	userId, ok := c.Get("id").(uuid.UUID)
+	if !ok {
+		return nil, errs.NewInternalServerError()
+	}
+
+	return s.db.GetConversationLogHistory(context.Background(), userId, payload)
 }

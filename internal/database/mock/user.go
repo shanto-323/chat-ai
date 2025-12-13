@@ -10,20 +10,20 @@ import (
 	"github.com/shanto-323/chat-ai/model/entity"
 )
 
-func (db *DB) CreateUser(ctx context.Context, user *dto.RegisterRequest) (*entity.User, error) {
+func (db *DB) CreateUser(ctx context.Context, userDto *dto.RegisterRequest) (*entity.User, error) {
 	userEntity := entity.User{
-		Email:        user.Email,
-		PasswordHash: user.Password,
+		Email:        userDto.Email,
+		PasswordHash: userDto.Password,
 	}
 
 	userEntity.ID = uuid.New()
 	userEntity.CreatedAt = time.Now()
 	userEntity.UpdatedAt = time.Now()
 
-	db.pool[user.Email] = &userEntity
+	db.pool[userDto.Email] = &userEntity
 	db.logger.Info().
 		Str("event", "user_created").
-		Str("email", user.Email).
+		Str("email", userDto.Email).
 		Msg("new user created")
 
 	return &userEntity, nil

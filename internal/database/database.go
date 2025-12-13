@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/shanto-323/chat-ai/config"
 	"github.com/shanto-323/chat-ai/internal/database/mock"
 	"github.com/shanto-323/chat-ai/internal/database/postgres"
+	"github.com/shanto-323/chat-ai/model"
 	"github.com/shanto-323/chat-ai/model/dto"
 	"github.com/shanto-323/chat-ai/model/entity"
 )
@@ -23,15 +25,14 @@ type Database interface {
 	CreateUser(ctx context.Context, user *dto.RegisterRequest) (*entity.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*entity.User, error)
 
-	CreateConversationLog(ctx context.Context, cl *entity.ConversationLog) (*entity.ConversationLog , error)
+	CreateConversationLog(ctx context.Context, cl *entity.ConversationLog) (*entity.ConversationLog, error)
+	GetConversationLogHistory(ctx context.Context, userId uuid.UUID, queryDto *dto.ConversationHistoryQuery) (*model.PaginatedResponse[entity.ConversationLog], error) 
 }
 
 func New(cfg *config.Config, logger *zerolog.Logger) (Database, error) {
 	switch cfg.Primary.DatabaseType {
 	case "postgres":
-		postgres.New(cfg, logger)
-		// return this
-		return nil, nil
+		return postgres.New(cfg, logger)
 	case "mock":
 		return mock.New(cfg, logger)
 	default:

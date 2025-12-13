@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/shanto-323/chat-ai/config"
+	"github.com/shanto-323/chat-ai/internal/database"
 	"github.com/shanto-323/chat-ai/internal/server"
 	"github.com/shanto-323/chat-ai/internal/server/handler"
 	"github.com/shanto-323/chat-ai/internal/server/router"
@@ -22,7 +23,11 @@ func main() {
 
 	logger := logs.New(cfg)
 
-	server, err := server.New(cfg,logger)
+	if err := database.Migrate(context.Background(), logger, cfg); err != nil {
+		logger.Fatal().Err(err).Msg("failed to migrate database")
+	}
+
+	server, err := server.New(cfg, logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to initialize server")
 	}

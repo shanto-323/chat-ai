@@ -11,6 +11,7 @@ func registerChatRoute(r *echo.Group, h *handler.Handlers, m *middleware.Middlew
 	{
 		chatRoute.Use(m.RequireAuth())
 		chatRoute.POST("", h.Chat.ChatHandler())
+		chatRoute.POST("/history", h.Chat.ChatHistoryHandler())
 	}
 
 }

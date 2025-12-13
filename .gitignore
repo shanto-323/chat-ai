@@ -4,4 +4,5 @@
 
 
 .env
+.env.postgres
 .DS_Store

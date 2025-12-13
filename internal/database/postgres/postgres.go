@@ -38,7 +38,7 @@ func New(cfg *config.Config, logger *zerolog.Logger) (*DB, error) {
 		return nil, fmt.Errorf("failed to create pgx pool: %w", err)
 	}
 
-	logger.Info().Msg("postgres service initialized successfully")
+	logger.Debug().Msg("postgres service initialized successfully")
 
 	return &DB{
 		pool:   pool,

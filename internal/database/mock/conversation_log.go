@@ -25,6 +25,6 @@ func (db *DB) CreateConversationLog(ctx context.Context, cl *entity.Conversation
 	return cl, nil
 }
 
-func (db *DB) GetConversationLogHistory(ctx context.Context, userId uuid.UUID, query *dto.ConversationHistoryQuery) (*model.PaginatedResponse[dto.ConversationLogResponse], error) {
+func (db *DB) GetConversationLogHistory(ctx context.Context, userId uuid.UUID, query *dto.ConversationHistoryQuery) (*model.PaginatedResponse[entity.ConversationLog], error) {
 	return nil, nil
 }
