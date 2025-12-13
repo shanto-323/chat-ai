@@ -27,7 +27,7 @@ func New(cfg *config.Config, logger *zerolog.Logger) (*Server, error) {
 		return nil, err
 	}
 
-	m, err := manager.New(cfg)
+	m, err := manager.New(cfg,logger)
 	if err != nil {
 		return nil, err
 	}
