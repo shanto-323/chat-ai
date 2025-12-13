@@ -23,8 +23,10 @@ func main() {
 
 	logger := logs.New(cfg)
 
-	if err := database.Migrate(context.Background(), logger, cfg); err != nil {
-		logger.Fatal().Err(err).Msg("failed to migrate database")
+	if cfg.Primary.DatabaseType != "mock" {
+		if err := database.Migrate(context.Background(), logger, cfg); err != nil {
+			logger.Fatal().Err(err).Msg("failed to migrate database")
+		}
 	}
 
 	server, err := server.New(cfg, logger)

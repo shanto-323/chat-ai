@@ -11,10 +11,7 @@ type Services struct {
 }
 
 func New(s *server.Server) *Services {
-	imageService, err := image.New(s.Logger,s.Config.UploadsDirectory)
-	if err != nil {
-		s.Logger.Err(err).Msg(err.Error())
-	}
+	imageService := image.New(s.Logger)
 	return &Services{
 		Auth: NewAuthService(s.Config, s.DB),
 		Chat: NewChatService(s.Manager, s.DB, imageService),

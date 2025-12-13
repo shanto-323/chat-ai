@@ -54,6 +54,7 @@ func (a *authService) Login(c echo.Context, payload *dto.LoginRequest) (*dto.Aut
 
 	logger.Info().
 		Str("event", "login").
+		Any("user", user).
 		Msg("logged in successfully")
 
 	return &dto.AuthResponse{
@@ -65,6 +66,12 @@ func (a *authService) Register(c echo.Context, payload *dto.RegisterRequest) (*d
 	logger := middleware.GetLogger(c)
 
 	user, err := a.db.GetUserByEmail(context.Background(), payload.Email)
+	_, ok := err.(*errs.HTTPError)
+	if !ok {
+		code := "USER_ALREADY_EXISTS"
+		return nil, errs.NewBadRequestError("email already exists", false, &code, nil, nil)
+	}
+
 	if user != nil {
 		logger.Warn().Msg("register failed, user exists")
 		return nil, err
@@ -93,6 +100,7 @@ func (a *authService) Register(c echo.Context, payload *dto.RegisterRequest) (*d
 
 	logger.Info().
 		Str("event", "login").
+		Any("user", user.ID).
 		Msg("registered successfully")
 
 	return &dto.AuthResponse{

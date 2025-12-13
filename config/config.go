@@ -19,7 +19,6 @@ type Config struct {
 	Ai               AI             `koanf:"ai" validate:"required"`
 	Key              Key            `koanf:"key" validate:"required"`
 	Logging          LoggingConfig  `koanf:"logging" validate:"required"`
-	UploadsDirectory string         `koanf:"directory" validate:"required"`
 }
 
 type Primary struct {

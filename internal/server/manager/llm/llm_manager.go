@@ -19,6 +19,6 @@ func New(cfg *config.Config, l *zerolog.Logger) (LLMManager, error) {
 	case "openrouter":
 		return openrouter.NewOpenrouter(cfg,l), nil
 	default:
-		return nil, fmt.Errorf("so such provider")
+		return nil, fmt.Errorf("so such provider for llm")
 	}
 }

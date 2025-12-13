@@ -41,11 +41,12 @@ func (o *Openrouter) GenerateResponse(ctx context.Context, request *dto.LLMReque
 }
 
 func (o *Openrouter) response(query string, model string) (string, error) {
+	// can provide 1 > messages for better context
 	body := map[string]any{
 		"model": model,
 		"messages": []map[string]string{
 			{
-				"role":    "user",
+				"role":    "system",
 				"content": query,
 			},
 		},

@@ -11,6 +11,6 @@ type ConversationLog struct {
 
 	UserID       uuid.UUID `db:"user_id" json:"user_id"`
 	TextQuery    string    `db:"text_query" json:"query"`
-	ImageURL     []string  `db:"image_urls" json:"image_urls"`
+	ImageURL     []string  `db:"image_url" json:"image_url"`
 	ResponseText string    `db:"response_text" json:"response_text"`
 }

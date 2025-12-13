@@ -1,0 +1,465 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Chat-AI API",
+        "description": "AI Chat API with multi-modal support for text and image inputs",
+        "version": "1.0.0",
+        "contact": {
+            "name": "Raco AI"
+        }
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8080",
+            "description": "Development Server"
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "description": "JWT token valid for 1 hour after login"
+            }
+        },
+        "schemas": {
+            "AuthRequest": {
+                "type": "object",
+                "required": [
+                    "email",
+                    "password"
+                ],
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "user@example.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "example": "securepassword123"
+                    }
+                }
+            },
+            "AuthResponse": {
+                "type": "object",
+                "properties": {
+                    "accessToken": {
+                        "type": "string",
+                        "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    },
+                    "expiresIn": {
+                        "type": "integer",
+                        "description": "Token expiry time in seconds",
+                        "example": 3600
+                    }
+                }
+            },
+            "ImageData": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "URL of the image",
+                        "example": "https://example.com/image.jpg"
+                    },
+                    "base64": {
+                        "type": "string",
+                        "description": "Base64 encoded image data",
+                        "example": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Image MIME type",
+                        "example": "image/jpeg"
+                    }
+                },
+                "description": "Image data - either URL or base64 encoded"
+            },
+            "ModelConfig": {
+                "type": "object",
+                "properties": {
+                    "llm_model": {
+                        "type": "string",
+                        "description": "Language model to use",
+                        "default": "llama_70b",
+                        "example": "llama_70b"
+                    },
+                    "vlm_model": {
+                        "type": "string",
+                        "description": "Vision language model to use",
+                        "default": "mock",
+                        "example": "mock"
+                    }
+                },
+                "description": "Model configuration - uses defaults if not provided"
+            },
+            "ChatRequest": {
+                "type": "object",
+                "properties": {
+                    "message_query": {
+                        "type": "string",
+                        "description": "Text message to send to AI",
+                        "example": "What is in this image?"
+                    },
+                    "image_s": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ImageData"
+                        },
+                        "description": "Array of images to include in the request"
+                    },
+                    "model_config": {
+                        "$ref": "#/components/schemas/ModelConfig"
+                    }
+                },
+                "description": "Chat request - at least either message_query or image_s is required"
+            },
+            "ChatResponse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Unique message ID",
+                        "example": "ec295d8e-98dc-4b78-988b-5b73788bb88d"
+                    },
+                    "llm_model_name": {
+                        "type": "string",
+                        "description": "Language model used",
+                        "example": "llama_70b"
+                    },
+                    "vlm_model_name": {
+                        "type": "string",
+                        "description": "Vision language model used",
+                        "example": "mock"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "When the message was created",
+                        "example": "2025-12-14T03:45:20.462969+06:00"
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "description": "ID of the user who sent the message",
+                        "example": "6f090a1c-f7ad-49e9-824d-6c7c3ab91175"
+                    },
+                    "query": {
+                        "type": "string",
+                        "description": "User's original message",
+                        "example": "What is in this image?"
+                    },
+                    "image_url": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "URLs of images included in the request",
+                        "example": []
+                    },
+                    "response_text": {
+                        "type": "string",
+                        "description": "AI response text",
+                        "example": "This image shows a cat sitting on a mat."
+                    }
+                }
+            },
+            "ConversationHistoryQuery": {
+                "type": "object",
+                "properties": {
+                    "page": {
+                        "type": "integer",
+                        "description": "Page number for pagination",
+                        "default": 1,
+                        "minimum": 1,
+                        "example": 1
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Number of records per page",
+                        "default": 10,
+                        "minimum": 1,
+                        "maximum": 100,
+                        "example": 10
+                    },
+                    "order": {
+                        "type": "string",
+                        "description": "Sort order for conversation history",
+                        "default": "desc",
+                        "enum": [
+                            "asc",
+                            "desc"
+                        ],
+                        "example": "desc"
+                    }
+                }
+            },
+            "ConversationMessage": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "msg_123"
+                    },
+                    "userMessage": {
+                        "type": "string",
+                        "example": "Hello, how are you?"
+                    },
+                    "aiResponse": {
+                        "type": "string",
+                        "example": "I'm doing well, thank you for asking!"
+                    },
+                    "images": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ImageData"
+                        }
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "ConversationHistoryResponse": {
+                "type": "object",
+                "properties": {
+                    "page": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "total": {
+                        "type": "integer",
+                        "description": "Total number of conversations",
+                        "example": 25
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ConversationMessage"
+                        }
+                    }
+                }
+            },
+            "ErrorResponse": {
+                "type": "object",
+                "properties": {
+                    "error": {
+                        "type": "string",
+                        "example": "Invalid credentials"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "Email or password is incorrect"
+                    }
+                }
+            }
+        }
+    },
+    "security": [
+        {
+            "bearerAuth": []
+        }
+    ],
+    "paths": {
+        "/api/v1/auth/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "User login",
+                "description": "Authenticate user with email and password. Returns a JWT token valid for 1 hour.",
+                "operationId": "login",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AuthRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successfully logged in",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
+        "/api/v1/auth/register": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "User registration",
+                "description": "Register a new user with email and password. Returns a JWT token valid for 1 hour.",
+                "operationId": "register",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AuthRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User registered successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input or user already exists",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
+        "/api/v1/chat": {
+            "post": {
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Send a message to AI",
+                "description": "Send a text message and/or images to the AI chat endpoint. Either message_query or image_s must be provided.",
+                "operationId": "sendChat",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Chat response received",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChatResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - either message_query or image_s must be provided",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - invalid or expired token"
+                    }
+                }
+            }
+        },
+        "/api/v1/chat/history": {
+            "post": {
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Get conversation history",
+                "description": "Retrieve paginated conversation history for the authenticated user",
+                "operationId": "getHistory",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number (default: 1)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Records per page (default: 10, max: 100)",
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "order",
+                        "in": "query",
+                        "description": "Sort order (default: desc)",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ],
+                            "default": "desc"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Conversation history retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ConversationHistoryResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - invalid or expired token"
+                    }
+                }
+            }
+        }
+    }
+}

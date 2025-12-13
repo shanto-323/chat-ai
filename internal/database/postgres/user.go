@@ -54,6 +54,7 @@ func (db *DB) CreateUser(ctx context.Context, userDto *dto.RegisterRequest) (*en
 func (db *DB) GetUserByEmail(ctx context.Context, email string) (*entity.User, error) {
 	query := `
 		SELECT
+			id,
 			password
 		FROM 
 			users
@@ -65,6 +66,7 @@ func (db *DB) GetUserByEmail(ctx context.Context, email string) (*entity.User, e
 	user := &entity.User{}
 
 	err := db.pool.QueryRow(ctx, query, pgx.NamedArgs{"email": email}).Scan(
+		&user.ID,
 		&user.PasswordHash,
 	)
 

@@ -14,10 +14,10 @@ type VLMManager interface {
 }
 
 func New(cfg *config.Config,logger *zerolog.Logger) (VLMManager, error) {
-	switch cfg.Ai.LLMInterfaceProvider {
+	switch cfg.Ai.VLMInterfaceProvider {
 	case "mock":
 		return mock.NewMockVLM(logger),nil 
 	default:
-		return nil, fmt.Errorf("so such provider")
+		return nil, fmt.Errorf("so such provider for vlm")
 	}
 }

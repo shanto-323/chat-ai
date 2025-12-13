@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,6 +10,7 @@ import (
 	"github.com/shanto-323/chat-ai/internal/database"
 	"github.com/shanto-323/chat-ai/internal/server/errs"
 	"github.com/shanto-323/chat-ai/internal/server/manager"
+	"github.com/shanto-323/chat-ai/internal/server/middleware"
 	"github.com/shanto-323/chat-ai/internal/service/image"
 	"github.com/shanto-323/chat-ai/model"
 	"github.com/shanto-323/chat-ai/model/dto"
@@ -36,14 +38,13 @@ func NewChatService(manager *manager.AIManager, db database.Database, is *image.
 }
 
 func (s *chatService) MultimodalChat(c echo.Context, payload *dto.ChatRequest) (*entity.ConversationLog, error) {
-	images, err := s.is.ProcessImage(payload.Images)
-	if err != nil {
-		return nil, err
-	}
-
 	// With a real vlm service we can get structerd info about images.
 	// For now this provide nothing as but can be implemented.
-	_, err = s.manager.VLMManager.AnalyzeImage(images)
+	images := []string{}
+	if len(payload.Images) > 0 {
+		images = s.is.ProcessImage(payload.Images)
+		_, _ = s.manager.VLMManager.AnalyzeImage(images)
+	}
 
 	// Lets imagine we got our info and we insered that in processedText.
 	processedText := payload.UserMessage
@@ -64,7 +65,7 @@ func (s *chatService) MultimodalChat(c echo.Context, payload *dto.ChatRequest) (
 	conversationLog := &entity.ConversationLog{
 		UserID:       userId,
 		TextQuery:    payload.UserMessage,
-		ImageURL:     make([]string, 0),
+		ImageURL:     images,
 		ResponseText: response,
 	}
 
@@ -75,6 +76,8 @@ func (s *chatService) MultimodalChat(c echo.Context, payload *dto.ChatRequest) (
 }
 
 func (s *chatService) MultimodalChatHistory(c echo.Context, payload *dto.ConversationHistoryQuery) (*model.PaginatedResponse[entity.ConversationLog], error) {
+	_ = middleware.GetLogger(c)
+
 	userId, ok := c.Get("id").(uuid.UUID)
 	if !ok {
 		return nil, errs.NewInternalServerError()
@@ -83,5 +86,6 @@ func (s *chatService) MultimodalChatHistory(c echo.Context, payload *dto.Convers
 	ctx, cancel := context.WithTimeout(c.Request().Context(), 10*time.Second)
 	defer cancel()
 
+	log.Println(userId)
 	return s.db.GetConversationLogHistory(ctx, userId, payload)
 }

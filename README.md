@@ -188,9 +188,14 @@ Response (200 OK):
 {
   "data": [
     {
-      "text_query": "Hello",
-      "image_url": [],
-      "response_text": "Hi there"
+      "id": "uuid",
+      "user_id": "uuid",
+      "text_query": "Describe this image",
+      "image_urls": ["/uploads/abc.png"],
+      "response_text": "AI response text",
+      "llm_model_name": "llama_70b",
+      "vlm_model_name": "mock",
+      "timestamp": "Time data created_at"
     }
   ],
   "limit": 10,

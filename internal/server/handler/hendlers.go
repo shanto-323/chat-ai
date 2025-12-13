@@ -6,13 +6,15 @@ import (
 )
 
 type Handlers struct {
-	Auth *AuthHandler
-	Chat *ChatHandler
+	Auth    *AuthHandler
+	Chat    *ChatHandler
+	OpenAPI *OpenAPIHandler
 }
 
 func New(s *server.Server, services *service.Services) *Handlers {
 	return &Handlers{
-		Auth: NewAuthHandler(services.Auth),
-		Chat: NewChatHandler(services.Chat),
+		Auth:    NewAuthHandler(services.Auth),
+		Chat:    NewChatHandler(services.Chat),
+		OpenAPI: NewOpenAPIHandler(),
 	}
 }

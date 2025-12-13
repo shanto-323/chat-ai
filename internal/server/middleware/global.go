@@ -79,7 +79,7 @@ func (global *Global) RequestLogger() echo.MiddlewareFunc {
 				Str("host", v.Host).
 				Str("ip", c.RealIP()).
 				Str("user_agent", c.Request().UserAgent()).
-				Msg("API")
+				Msg("CHAT-API")
 
 			return nil
 		},

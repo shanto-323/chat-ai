@@ -23,9 +23,11 @@ func NewRouter(s *server.Server, h *handler.Handlers) *echo.Echo {
 		middlewares.Secure(),
 		middleware.RequestID(),
 		middlewares.EnhanceContext(),
-		middlewares.Global.RequestLogger(),
-		middlewares.Global.Recover(),
+		middlewares.RequestLogger(),
+		middlewares.Recover(),
 	)
+
+	registerSystemRoutes(router, h)
 
 	r := router.Group(ApiVersion)
 	v1.RegisterV1Routes(r, h, middlewares)
