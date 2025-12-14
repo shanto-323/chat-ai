@@ -9,5 +9,6 @@ RUN go build -o /cmd/bin/app ./cmd
 FROM alpine:3.22
 WORKDIR /usr/bin
 COPY --from=build /cmd/bin/app .
+COPY --from=build /chat-ai/static ./static
 CMD [ "app" ]
 
