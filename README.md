@@ -27,25 +27,14 @@ git clone https://github.com/yourusername/chat-ai.git
 cd chat-ai
 ```
 
-2. Install dependencies:
-```bash
-go mod download
-```
-
-3. Configure environment variables (see Configuration section below)
+2. Configure environment variables (see Configuration section below)
 
 4. Run the application:
 ```bash
-go run ./cmd/main
+docker-compose up --build
 ```
 
 Visit `http://localhost:8080/docs` for interactive API documentation.
-
-### Docker
-
-```bash
-docker-compose up --build
-```
 
 ---
 
@@ -118,10 +107,8 @@ Edit `.env.postgres` with your database details:
 
 ```dotenv
 POSTGRES_USER=postgres
-POSTGRES_PASSWORD=yourpassword
-POSTGRES_DB=chat_ai
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
+POSTGRES_PASSWORD=password
+POSTGRES_DB=postgres
 ```
 
 This file is only used when `DATABASE_TYPE=postgres`.
@@ -166,7 +153,7 @@ All endpoints except `/auth/register` and `/auth/login` require a JWT token.
 
 **Include token in requests:**
 ```
-Authorization: Bearer <token>
+Authorization: <token>
 ```
 
 ---
@@ -291,8 +278,21 @@ Response:
 
 ```json
 {
-  "error": "Error type",
-  "message": "Detailed error message"
+  "code": "ERROR_CODE",
+  "message": "Human-readable error message",
+  "status": 400,
+  "override": false,
+  "errors": [
+    {
+      "field": "field_name",
+      "error": "Field-specific error message"
+    }
+  ],
+  "action": {
+    "type": "redirect",
+    "message": "Action message for client",
+    "value": "/redirect/path"
+  }
 }
 ```
 
