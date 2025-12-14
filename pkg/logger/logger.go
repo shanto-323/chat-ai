@@ -9,7 +9,7 @@ import (
 	"github.com/shanto-323/chat-ai/config"
 )
 
-func New(cfg *config.Config) *zerolog.Logger {
+func New(cfg *config.Config) (zerolog.Logger, error) {
 	var logLevel zerolog.Level
 	level := cfg.Logging.Level
 
@@ -30,24 +30,15 @@ func New(cfg *config.Config) *zerolog.Logger {
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 
 	var writer io.Writer
-	baseWriter := os.Stdout
 
-	if cfg.IsProd() {
-		err := os.MkdirAll("/var/lib/logs", 0o755)
-		if err == nil {
-			file, err := os.OpenFile("/var/lib/logs/app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-			if err == nil {
-				writer = io.Writer(file)
-			} else {
-				file.Close()
-				writer = io.Writer(baseWriter)
-			}
-		} else {
-			writer = io.Writer(baseWriter)
-		}
-	} else {
-		writer = io.Writer(baseWriter)
+	if err := os.MkdirAll("/var/lib/logs", 0o755); err != nil {
+		return zerolog.New(os.Stdout), err
 	}
+	file, err := os.OpenFile("/var/lib/logs/app.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return zerolog.New(os.Stdout), err
+	}
+	writer = io.MultiWriter(file, os.Stdout)
 
 	logger := zerolog.New(writer).
 		Level(logLevel).
@@ -57,5 +48,5 @@ func New(cfg *config.Config) *zerolog.Logger {
 		Str("environment", cfg.Primary.Env).
 		Logger()
 
-	return &logger
+	return logger, nil
 }

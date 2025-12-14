@@ -21,15 +21,18 @@ func main() {
 		panic("error loading config " + err.Error())
 	}
 
-	logger := logs.New(cfg)
+	logger, err := logs.New(cfg)
+	if err != nil {
+		panic("error loading logger " + err.Error())
+	}
 
 	if cfg.Primary.DatabaseType != "mock" {
-		if err := database.Migrate(context.Background(), logger, cfg); err != nil {
+		if err := database.Migrate(context.Background(), &logger, cfg); err != nil {
 			logger.Fatal().Err(err).Msg("failed to migrate database")
 		}
 	}
 
-	server, err := server.New(cfg, logger)
+	server, err := server.New(cfg, &logger)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to initialize server")
 	}
